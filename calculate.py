@@ -1,4 +1,6 @@
 import csv
+from functools import partial 
+
 PATH_TO_VALENCE_AROUSAL_DATA = "Valence, Arousal, Dominance - Ratings_Warriner_et_al.csv"
 PATH_TO_EMOTION_VALUES = "Emotion Values.csv"
 PATH_TO_LYRIC_DATA = "lyrics.csv"
@@ -14,21 +16,21 @@ def readValenceArousalCSV(PATH_TO_DATA):
     
     return word_info
 
-def readEmotionValuesCSV(PATH_TO_DATA):
+def readEmotionValuesCSV(PATH_TO_DATA, maxVal, minVal, maxAro, minAro):
 	emotionVals = {}
     # calculate valence
     with open(PATH_TO_DATA) as f:
         reader = csv.reader(f)
         reader.next()
         emoVal = [float(x[1]) for x in reader]
-        f_emoVals = rescale(emoVal, 0, 10)
+        f_emoVals = rescale(emoVal, minVal, maxVal)
     
     # calculate arousal        
     with open(PATH_TO_DATA) as f: 
         reader = csv.reader(f)
         reader.next()
         emoAro = [float(x[2]) for x in reader]
-        f_emoAro = rescale(emoAro, 0, 10)
+        f_emoAro = rescale(emoAro, minAro, maxAro)
     
     # word    
     with open(PATH_TO_DATA) as f: 
@@ -105,10 +107,30 @@ def calcValAroForSong(songDict):
         song_avg_emotion_val[name] = [f_avg_val, f_avg_aro]
     return song_avg_emotion_val
 
+# use euclidean geometry to calculate the closest value
+def distance_squared(x, emotionVals):
+    y = emotionVals[1]
+    return (x[0] - y[0])**2 + (x[1]-y[1])**2
+
+# method that generates a hashmap of songs and
+# their corresponding emotions 
+def matchSongToEmotion():
+    song_emotion_mapping = {}
+    for song, values in song_avg_emotion_val.items():
+        closestEmotion = min(sorted_emoVal, key=partial(distance_squared, values))
+        song_emotion_mapping[song] = closestEmotion[0]
+    return song_emotion_mapping
+
 def main():
 	val_aro_words = readValenceArousalCSV(PATH_TO_VALENCE_AROUSAL_DATA)
-	emotion_values = readEmotionVals(PATH_TO_EMOTION_VALUES)
 	songData = readSongDataCSV(PATH_TO_LYRIC_DATA)
 	total_song_avg_val_aro_scores = calcValAroForSong(songData)
+
+    maxVal = max(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][0])[1][0]
+    minVal = min(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][0])[1][0]
+    maxAro = max(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][1])[1][1]
+    minAro = min(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][1])[1][1]
+
+    emotion_values = readEmotionVals(PATH_TO_EMOTION_VALUES, maxVal, minVal, maxAro, minAro)
 	# sorted emotions by valence - lowest to greatest
 	sorted_emoVal = sorted(emotionVals.items(), key=lambda pair: pair[1])
