@@ -1,6 +1,12 @@
 import csv
 from functools import partial 
 
+# Jen Zhu & Dani Mednikoff
+# CS 585, Fall 2017
+# Final Project Code
+
+# Python File Version of Jupiter Code
+
 PATH_TO_VALENCE_AROUSAL_DATA = "data/Valence, Arousal, Dominance - Ratings_Warriner_et_al.csv"
 PATH_TO_EMOTION_VALUES = "data/Emotion Values.csv"
 PATH_TO_LYRIC_DATA = "data/lyrics.csv"
@@ -8,6 +14,7 @@ OUTPUT_PATH = "generatedCSVFromData/output.csv"
 EMOTION_OUTPUT_PATH = "generatedCSVFromData/emotion_vals.csv"
 ALL_OUTPUT_PATH = "generatedCSVFromData/alldata.csv"
 EMOTION_SONG_OUTPUT_PATH = "generatedCSVFromData/emotion_counts.csv"
+
 
 def readValenceArousalCSV(PATH_TO_DATA):
     word_info = {}
@@ -135,6 +142,7 @@ def matchSongToEmotion(song_avg_emotion_val, sorted_emoVal):
         song_emotion_mapping[song] = closestEmotion[0]
     return song_emotion_mapping
 
+# methods for generating various charts
 '''
 def writeToCSV(path, values, counts, headerVals):
     with open(path, 'wb') as csvfile:
@@ -168,10 +176,17 @@ def main():
     songData = readSongDataCSV(PATH_TO_LYRIC_DATA)
     total_song_avg_val_aro_scores = calcValAroForSong(songData, val_aro_words)
 
+    # original case - using the maximum and minimum values
     maxVal = max(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][0])[1][0]
     minVal = min(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][0])[1][0]
     maxAro = max(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][1])[1][1]
     minAro = min(total_song_avg_val_aro_scores.iteritems(), key=lambda x: x[1][1])[1][1]
+
+    # experiment, using the upper and lower fences of the dataset's boxplots instead
+    #maxVal = 6.872222
+    #minVal = 5.120208
+    #maxAro = 4.740899
+    #minAro = 3.514954
 
     emotion_values = readEmotionValuesCSV(PATH_TO_EMOTION_VALUES, maxVal, minVal, maxAro, minAro)
     # sorted emotions by valence - lowest to greatest
